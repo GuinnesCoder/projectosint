@@ -1,0 +1,31 @@
+# Virtual environments
+.venv/
+.venv_old/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables / Secrets
+.env
+.env.bak
+.env_new
+.env_temp
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Local databases / reports
+*.db
+reports/
+Project_Report.pdf

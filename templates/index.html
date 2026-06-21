@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.H.O.S.T. / Global Heuristic OSINT System Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { green: '#0aff0a', dark: '#0a0a0a', border: '#005500', bg: '#020e02' }
+                    },
+                    fontFamily: { mono: ['"Space Mono"', 'monospace'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+        body {
+            font-family: 'Space Mono', monospace;
+            overflow-y: scroll;
+            background-color: #050505;
+            color: #0aff0a;
+        }
+
+        .glitch {
+            text-shadow: 2px 2px 0px #f00, -2px -2px 0px #0ff;
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0% {
+                text-shadow: 2px 2px 0px #f00, -2px -2px 0px #0ff;
+            }
+
+            25% {
+                text-shadow: -2px 2px 0px #f00, 2px -2px 0px #0ff;
+            }
+
+            50% {
+                text-shadow: 2px -2px 0px #f00, -2px 2px 0px #0ff;
+            }
+
+            75% {
+                text-shadow: -2px -2px 0px #f00, 2px 2px 0px #0ff;
+            }
+
+            100% {
+                text-shadow: 2px 2px 0px #f00, -2px -2px 0px #0ff;
+            }
+        }
+
+        .crteffect {
+            box-shadow: inset 0 0 100px rgba(0, 255, 0, 0.1);
+        }
+
+        .console-box {
+            border: 1px solid #005500;
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #005500;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0aff0a;
+        }
+    </style>
+</head>
+
+<body class="crteffect min-h-screen relative p-4 md:p-10 flex flex-col md:flex-row gap-6 bg-[#050505] text-[#0aff0a]">
+
+    <!-- LEFT PANEL: CONTROLS & CONSOLE -->
+    <div class="w-full md:w-1/2 flex flex-col gap-6">
+        <header class="border-b border-cyber-border pb-4">
+            <h1 class="text-4xl font-bold uppercase tracking-widest text-[#0aff0a] mb-2 glitch">G.H.O.S.T.</h1>
+            <p class="text-sm opacity-75">// Global OSINT Reconnaissance Framework</p>
+        </header>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold tracking-widest text-cyber-green">// INPUT TARGET [IP, Email, Phone,
+                Username, TG_ID, Domain, BTC, ETH, VIN, MAC, FIO, CVE, Hash, ASN, GPS, Card]</label>
+            <div class="flex">
+                <span
+                    class="bg-[#0a0a0a] border border-[#005500] border-r-0 py-3 px-4 text-[#0aff0a] flex items-center">&gt;</span>
+                <input type="text" id="targetInput" placeholder="IP, Email, Username, CVE-2024-..., 0xETH, AS15169, 55.75,37.61"
+                    class="w-full bg-[#0a0a0a] border border-[#005500] py-3 px-4 text-[#0aff0a] focus:outline-none focus:border-[#0aff0a] focus:shadow-[0_0_10px_#0aff0a] transition-all"
+                    onkeydown="if(event.key==='Enter') startScan()">
+                <button onclick="startScan()"
+                    class="bg-cyber-border hover:bg-cyber-green hover:text-black border border-cyber-border py-3 px-6 font-bold uppercase transition-all whitespace-nowrap">
+                    EXEC
+                </button>
+            </div>
+            <p id="statusMsg" class="text-xs mt-1 h-4 animate-pulse text-yellow-500"></p>
+        </div>
+
+        <div class="flex-grow flex flex-col min-h-[400px]">
+            <label class="text-xs font-bold tracking-widest text-cyber-green mb-2">// HACKER CONSOLE -- REALTIME
+                OUT</label>
+            <div id="consoleOut"
+                class="console-box flex-grow p-4 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap h-96">
+                <span class="opacity-50">System initialized. Awaiting target input...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: DOSSIER RESULTS -->
+    <div class="w-full md:w-1/2 flex flex-col gap-6" id="dossierContainer">
+        <div class="flex justify-between items-center border-b border-cyber-border pb-4">
+            <h2 class="text-2xl font-bold uppercase tracking-widest text-[#0aff0a]">// INTELLIGENCE DOSSIER</h2>
+            <button id="downloadBtn" onclick="downloadPDF()"
+                class="hidden bg-cyber-dark text-cyber-green hover:bg-cyber-green hover:text-black border border-cyber-green py-2 px-4 uppercase text-sm font-bold transition-all shadow-[0_0_5px_#0aff0a]">
+                [↓] Download PDF
+            </button>
+        </div>
+
+        <div id="cardsArea" class="flex flex-col gap-4 overflow-y-auto max-h-[800px] pb-10">
+            <!-- Cards appended here dynamically -->
+            <div class="text-center opacity-50 text-sm mt-10" id="waitingText">
+                Awaiting entity correlation to generate dossier...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let globalDossier = {};
+        let currentQuery = "";
+
+        function logToConsole(msg, isError = false) {
+            const out = document.getElementById("consoleOut");
+            const span = document.createElement("div");
+            span.textContent = msg;
+            if (isError) span.className = "text-red-500 font-bold";
+            out.appendChild(span);
+            out.scrollTop = out.scrollHeight;
+        }
+
+        function clearConsole() {
+            const out = document.getElementById("consoleOut");
+            out.innerHTML = "";
+            document.getElementById("cardsArea").innerHTML = "";
+            document.getElementById("downloadBtn").classList.add("hidden");
+            globalDossier = {};
+            currentQuery = "";
+        }
+
+        function createResultCard(moduleName, data) {
+            const area = document.getElementById("cardsArea");
+            document.getElementById("waitingText")?.remove();
+
+            const card = document.createElement("div");
+            card.className = "console-box p-4 border-l-4 border-l-cyber-green shadow-lg transition-all animate-fade-in";
+
+            let cardHtml = `<div class="font-bold text-lg mb-2 uppercase tracking-wide flex justify-between">
+                <span>[MODULE] ${moduleName}</span>
+                <span class="text-xs opacity-50 animate-pulse text-green-300">DATA_EXTRACTED</span>
+            </div>
+            <div class="bg-black bg-opacity-50 p-3 text-sm opacity-90 overflow-x-auto">
+                <pre class="whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
+            </div>`;
+
+            card.innerHTML = cardHtml;
+            area.appendChild(card);
+        }
+
+        function startScan() {
+            const target = document.getElementById("targetInput").value.trim();
+            if (!target) return;
+
+            clearConsole();
+            logToConsole(`[SYSTEM] Initializing socket connection for target: ${target}`);
+            document.getElementById("statusMsg").innerText = "CONNECTING UPLINK...";
+
+            // Connect WebSocket
+            const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/scan`);
+
+            ws.onopen = () => {
+                document.getElementById("statusMsg").innerText = "UPLINK ESTABLISHED. TRANSMITTING TARGET...";
+                ws.send(JSON.stringify({ query: target }));
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const res = JSON.parse(event.data);
+
+                    if (res.type === "log") {
+                        logToConsole(res.msg, res.msg.includes("[!]"));
+                    } else if (res.type === "card") {
+                        createResultCard(res.module, res.data);
+                        globalDossier[res.module] = res.data;
+                    } else if (res.type === "complete") {
+                        document.getElementById("statusMsg").innerText = "SCAN COMPLETE.";
+                        document.getElementById("statusMsg").className = "text-xs mt-1 h-4 text-green-500 font-bold";
+                        logToConsole(`[+] Final Dossier compiled successfully.`);
+                        currentQuery = res.query;
+                        document.getElementById("downloadBtn").classList.remove("hidden");
+                        ws.close();
+                    }
+                } catch (e) {
+                    console.error("Parse error", e);
+                }
+            };
+
+            ws.onerror = (e) => {
+                logToConsole("[!] CRITICAL ERROR: WebSocket Connection Failed.", true);
+                document.getElementById("statusMsg").innerText = "ERR_CONNECTION_REFUSED";
+                document.getElementById("statusMsg").className = "text-xs mt-1 h-4 text-red-500";
+            };
+
+            ws.onclose = () => {
+                if (document.getElementById("statusMsg").innerText !== "SCAN COMPLETE.") {
+                    document.getElementById("statusMsg").innerText = "CONNECTION TERMINATED.";
+                }
+            }
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFillColor(10, 10, 10);
+            doc.rect(0, 0, 210, 297, "F");
+
+            doc.setTextColor(10, 255, 10);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(22);
+            doc.text("G.H.O.S.T. INTELLIGENCE DOSSIER", 20, 30);
+
+            doc.setFontSize(14);
+            doc.text(`Target Entity: ${currentQuery}`, 20, 45);
+            doc.text(`Timestamp: ${new Date().toISOString()}`, 20, 55);
+
+            doc.setDrawColor(10, 255, 10);
+            doc.line(20, 60, 190, 60);
+
+            let yPos = 70;
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+
+            for (const [module, data] of Object.entries(globalDossier)) {
+                if (yPos > 270) {
+                    doc.addPage();
+                    doc.setFillColor(10, 10, 10);
+                    doc.rect(0, 0, 210, 297, "F");
+                    doc.setTextColor(10, 255, 10);
+                    yPos = 20;
+                }
+
+                doc.setFont("courier", "bold");
+                doc.text(`MODULE: ${module}`, 20, yPos);
+                yPos += 8;
+
+                doc.setFont("courier", "normal");
+                const textLines = doc.splitTextToSize(JSON.stringify(data, null, 2), 170);
+
+                for (let i = 0; i < textLines.length; i++) {
+                    if (yPos > 280) {
+                        doc.addPage();
+                        doc.setFillColor(10, 10, 10);
+                        doc.rect(0, 0, 210, 297, "F");
+                        doc.setTextColor(10, 255, 10);
+                        yPos = 20;
+                    }
+                    doc.text(textLines[i], 20, yPos);
+                    yPos += 5;
+                }
+                yPos += 10;
+            }
+
+            doc.save(`OSINT_Dossier_${currentQuery.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+        }
+    </script>
+</body>
+
+</html>

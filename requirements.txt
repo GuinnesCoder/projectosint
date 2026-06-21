@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+websockets
+sqlalchemy
+aiohttp
+python-dotenv
+jinja2
+phonenumbers
+holehe
+maigret
+bs4
+lxml
+fpdf2
+telethon
