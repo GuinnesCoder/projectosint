@@ -29,3 +29,7 @@ __pycache__/
 *.db
 reports/
 Project_Report.pdf
+
+# Telegram sessions
+*.session
+*.session-journal
